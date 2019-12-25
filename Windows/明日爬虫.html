@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+        .image-box img{
+            width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">        
+        <input type="text" style="width: 300px" placeholder="website" v-model="website">
+        <input type="text" placeholder="图书编号" v-model="bookNum">
+        <input type="text" placeholder="父特征字符" v-model="str">
+        <input type="text" placeholder="章节数" v-model="chapters">
+        <input type="button" value="生成链接" @click="generate">
+        <span style="color: red">总图片数应为：{{totalCount}}</span><br>
+        
+        <span v-for="i in chapterCount">
+            <input :ref="'start'+i" type="text" :placeholder="'第'+i+'章起始页'">
+            <input :ref="'end'+i" type="text" :placeholder="'第'+i+'章末尾页'">
+            <input :ref="'str'+i" type="text" :placeholder="'第'+i + '章特征字符串'">
+            <input type="button" :value="'生成第'+i+'章图片'" @click="generateImage(i)">
+            <span :ref="'count'+i" style="color: red"></span><br>
+        </span>
+
+
+        <div class="image-box">
+            <span v-for="(s, index) in linkList">
+                {{index+1}}
+                <img :src="s" alt="">
+                
+            </span>
+            
+            
+           
+        </div>
+        
+        
+    
+        
+    </div>
+    <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+    <!-- https://test.mingrisoft.com//uploads/ebook/582/1/235ef0619c6704e.jpg -->
+    <!-- https://test.mingrisoft.com//uploads/ebook/582/1/245ef0619c6704e.jpg -->
+    <!-- https://test.mingrisoft.com//uploads/ebook/582/2/325ef0619c67bf0.jpg -->
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                website: 'https://test.mingrisoft.com/uploads/ebook',
+                bookNum: '582',
+                chapters: '12',
+                str: '5ef0619c6',
+                links: [],
+                totalCount: '',
+                linkList: []
+            },
+            methods: {
+                generate(){
+                    this.links = []
+                    // 章节数
+                    let chapters = parseInt(this.chapters)
+                    for(let i = 1; i <= chapters; i++){
+                        // 起始页
+                        let startPage = this.$refs['start' + i][0].value
+                        let endPage
+                        let linkList = []
+                        // 末尾页
+                        if(i !== chapters){
+                            endPage = this.$refs['start' + (i+1)][0].value - 1
+                            this.$refs['end' + i][0].value = endPage
+                        } else {
+                            endPage = this.$refs['end' + i][0].value
+                        }
+                        
+                        for(let j = startPage; j <= endPage; j++){
+                            let str = this.$refs['str' + i][0].value
+                            let link = `${this.website}/${this.bookNum}/${i}/${j}${this.str}${str}.jpg`
+                            linkList.push(link)
+                        }
+                        this.links.push(linkList)
+                        
+                        
+                        this.$refs['count' + i][0].innerHTML = this.$refs['end' + i][0].value - this.$refs['start' + i][0].value + 1
+                    }
+                    this.totalCount = parseInt(this.$refs['end' + this.chapters][0].value) - parseInt(this.$refs['start1'][0].value) + 1                    
+                    
+                },
+                generateImage(i){
+                    document.title = '第' + i + '章'
+                    this.linkList = this.links[i-1]
+                }
+            },
+            computed: {
+                chapterCount(){
+                    let box = this.$refs['chapter-box']
+                    if(box){
+                        console.log(box.length)
+                    }
+                    
+                    return parseInt(this.chapters ? this.chapters : 0)
+                }
+            }
+        })
+    </script>
+</body>
+</html>
