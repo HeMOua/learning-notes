@@ -157,7 +157,7 @@ scene.setCursor(Cursor.CLOSED_HAND);
 
 ## 6、Group（组）
 
-```
+```java
 Group group = new Group();
 group.getChildren();//获取子元素
 group.getChildren().add();//添加子元素
@@ -166,7 +166,7 @@ Object[] obj = group.getChildren().toArray();//获取所有的子元素
 
 # 二、组件
 
-## 1、Button（按钮）
+## Button（按钮）
 
 ### 1.基本操作
 
@@ -190,7 +190,63 @@ Object[] obj = group.getChildren().toArray();//获取所有的子元素
 
 ![image-20200503115051299](img/image-20200503115051299.png)
 
-## 2、其他组件
+![image-20200730210500964](img/image-20200730210500964.png)
+
+第4种最好
+
+## Menu（菜单）
+
+```xml
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.MenuController">
+  <top>
+    <MenuBar>
+      <Menu text="文件">
+        <MenuItem text="打开文件" accelerator="ctrl+k" onAction="#handleMenuEvent"/>
+        <MenuItem text="打开文件夹" onAction="#handleMenuEvent"/>
+        <SeparatorMenuItem/>
+        <MenuItem text="退出" onAction="#handleMenuEvent"/>
+      </Menu>
+    </MenuBar>
+  </top>
+</BorderPane>
+```
+
+编码方式设置快捷键
+
+```java
+MenuItem menuItem = (MenuItem) event.getSource();
+menuItem.setAccelerator(KeyCombination.valueOf("ctrl+k"));
+```
+
+```java
+Menu menu;
+menu.setOnShowing(new EventHandler<Event>() {
+    @Override
+    public void handle(Event event) {
+
+    }
+});
+menu.setOnHidden(new EventHandler<Event>() {
+    @Override
+    public void handle(Event event) {
+
+    }
+});
+```
+
+meun显现事件、消失事件
+
+## Tab（选项卡）
+
+![image-20200801073216742](img/image-20200801073216742.png)
+
+![image-20200801073756551](img/image-20200801073756551.png)
+
+![image-20200801074244010](img/image-20200801074244010.png)
+
+## 其他组件
 
 + TextField
   + setPromptText() //类似placeholder
@@ -208,28 +264,129 @@ host.showDocument("");
 
 # 三、布局
 
-## 1、AnchorPane
+## BorderPane
 
-+ setTopAnchor(obj, value)
-+ setLeftAnchor(obj, value)
-+ setPadding(new Insets())
+The BorderPane layout pane provides five regions in which to place nodes: top, bottom, left, right, and center. Figure 1-1 shows the type of layout that you can create with a border pane. The regions can be any size. If your application does not need one of the regions, you do not need to define it and no space is allocated for it.
 
-## 2、HBox和VBox
+![Description of Figure 1-1 follows](img/border.png)
+
+If the window is larger than the space needed for the contents of each region, **the extra space is given to the center region by default.**
+
+如何创建一个BorderPane
+
+```java
+BorderPane border = new BorderPane();
+HBox hbox = addHBox()
+border.setTop(hbox);
+border.setLeft(addVBox());
+addStackPane(hbox);         // Add stack to HBox in top region
+
+border.setCenter(addGridPane());
+border.setRight(addFlowPane());
+```
+
+## HBox
 
 + setPadding()
 + setMargin()
 + setSpacing()
 + setAilgnment()
 
-## 3、BorderPane
+![Description of Figure 1-2 follows](img/hbox.png)
 
-## 4、FlowPane
+Example 1-2 Create an HBox Pane
+
+```java
+public HBox addHBox() {
+    HBox hbox = new HBox();
+    hbox.setPadding(new Insets(15, 12, 15, 12));
+    hbox.setSpacing(10);
+    hbox.setStyle("-fx-background-color: #336699;");
+
+    Button buttonCurrent = new Button("Current");
+    buttonCurrent.setPrefSize(100, 20);
+
+    Button buttonProjected = new Button("Projected");
+    buttonProjected.setPrefSize(100, 20);
+    hbox.getChildren().addAll(buttonCurrent, buttonProjected);
+
+    return hbox;
+}
+```
+
+## VBox
+
+![Description of Figure 1-4 follows](img/vbox.png)
+
+Example 1-3 Create a VBox Pane
+
+```java
+public VBox addVBox(); {
+    VBox vbox = new VBox();
+    vbox.setPadding(new Insets(10));
+    vbox.setSpacing(8);
+
+    Text title = new Text("Data");
+    title.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+    vbox.getChildren().add(title);
+
+    Hyperlink options[] = new Hyperlink[] {
+        new Hyperlink("Sales"),
+        new Hyperlink("Marketing"),
+        new Hyperlink("Distribution"),
+        new Hyperlink("Costs")};
+
+    for (int i=0; i<4; i++) {
+        VBox.setMargin(options[i], new Insets(0, 0, 0, 8));
+        vbox.getChildren().add(options[i]);
+    }
+
+    return vbox;
+}
+```
+
+## StackPane
+
+StackPane布局窗格将所有节点放在单个堆栈中，每个新节点都添加到前一个节点的顶部。这个布局模型提供了一种简单的方法，可以在一个形状或图像上覆盖文本，或者重叠常见的形状来创建一个复杂的形状。图1-6显示了一个帮助图标，它是通过将一个问号叠加在带有渐变背景的矩形上创建的。
+
+![Description of Figure 1-6 follows](img/stack.png)
+
+Example 1-4 Create a Stack Pane
+
+```java
+public void addStackPane(HBox hb) {
+    StackPane stack = new StackPane();
+    Rectangle helpIcon = new Rectangle(30.0, 25.0);
+    helpIcon.setFill(new LinearGradient(0,0,0,1, true, CycleMethod.NO_CYCLE,
+        new Stop[]{
+        new Stop(0,Color.web("#4977A3")),
+        new Stop(0.5, Color.web("#B0C6DA")),
+        new Stop(1,Color.web("#9CB6CF")),}));
+    helpIcon.setStroke(Color.web("#D0E6FA"));
+    helpIcon.setArcHeight(3.5);
+    helpIcon.setArcWidth(3.5);
+
+    Text helpText = new Text("?");
+    helpText.setFont(Font.font("Verdana", FontWeight.BOLD, 18));
+    helpText.setFill(Color.WHITE);
+    helpText.setStroke(Color.web("#7080A0")); 
+
+    stack.getChildren().addAll(helpIcon, helpText);
+    stack.setAlignment(Pos.CENTER_RIGHT);     // Right-justify nodes in stack
+    StackPane.setMargin(helpText, new Insets(0, 10, 0, 0)); // Center "?"
+
+    hb.getChildren().add(stack);            // Add stack pane to HBox object
+    HBox.setHgrow(stack, Priority.ALWAYS);    // Give stack any extra space
+}
+```
+
+## FlowPane
 
 + setVgap()
 + setHgap()
 + setOrientation()
 
-## 5、GridPane
+## GridPane
 
 ```java
 //统一设置
@@ -254,9 +411,7 @@ pane.getColumnConstraints().add(new ColumnConstraints(100));//设置第一列间
 pane.getRowConstraints().add(new RowConstraints(50));//设置第一行间距
 ```
 
-## 6、StackPane
-
-## 7、其他布局
+## 其他布局
 
 + TextFlow
   + setLineSpacing

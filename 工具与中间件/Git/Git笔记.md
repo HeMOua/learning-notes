@@ -694,3 +694,11 @@ git config --global alias.<aliasname> <realName>
 
 存放在`.git/config`目录下
 
+## 其他
+
+### 存储密码
+
+```shell
+ git config --global credential.helper store
+```
+
