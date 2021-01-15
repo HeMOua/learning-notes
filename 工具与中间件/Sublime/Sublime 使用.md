@@ -66,6 +66,22 @@ emmet
 
 <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>↑/↓</kbd>：递增或递减数字（步长为10）
 
-# 三、自动补全
+# 三、自定义快捷键
+
+## 用默认浏览器打开
+
+首选项 -> 快捷键设置
+
+配置如下
+
+```json
+[
+    { "keys": ["f12"], "command": "open_in_browser" }
+]
+```
+
+
+
+# 四、自动补全
 
 `link:css` 	自动补全css链接样式
