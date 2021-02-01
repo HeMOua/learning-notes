@@ -1760,6 +1760,12 @@ spring:
 
 ```java
 @Bean
+@ConfigurationProperties("spring.datasource")
+public DataSource dataSource(){
+    return new DruidDataSource();
+}
+
+@Bean
 public ServletRegistrationBean statViewServlet(){
     ServletRegistrationBean bean = new ServletRegistrationBean(new StatViewServlet(), "/druid/*");
     Map<String, String> initParams = new HashMap<String, String>();

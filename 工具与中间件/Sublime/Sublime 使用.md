@@ -36,6 +36,8 @@
 
 emmet
 
+tab 缩进失效，只能用 ctrl + [ 或者 ctrl + ] 替代
+
 # 二、快捷操作
 
 <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>2</kbd>：将页面分为两个屏幕
@@ -85,3 +87,4 @@ emmet
 # 四、自动补全
 
 `link:css` 	自动补全css链接样式
+

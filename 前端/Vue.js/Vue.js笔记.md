@@ -1349,6 +1349,10 @@ options 参数说明:
 
 ![image-20200319191804491](img/image-20200319191804491.png)
 
+## axios
+
+
+
 # 六、过渡和动画
 
 ## 1、概述
@@ -2739,9 +2743,23 @@ module: { // 用来配置第三方loader模块的
   + `name`打包后图片的名字
 
 ```js
-{ test: /\.(png|jpg|gif)$/, use: 'url-loader?limit=43960&name=[hash:8]-[name].[ext]' },
+{ test: /\.(png|jpg|gif)$/, use: 'url-loader?limit=410&name=[hash:8]-[name].[ext]'},
 { test: /\.(ttf|eot|svg|woff|woff2)$/, use: 'url-loader' },
 ```
+
+或者
+
+```json
+{ 
+    test: /\.(png|jpg|gif)$/, 
+    use: 'url-loader?limit=410&name=[hash:8]-[name].[ext]',
+    options: {
+        limit: 8 * 1024 // 小于 8 kb 就会base64处理
+    }    
+}
+```
+
+
 
 ## 使用babel处理高级JS语法
 

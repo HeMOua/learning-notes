@@ -190,7 +190,7 @@ var [自定义变量名称] = require('[模块]')
 
 ## 3、导出`exports`
 
-+ Node中是模块作用域，默认文件中所有的成员只在当前文件模块有效
++ ==Node中是模块作用域，默认文件中所有的成员只在当前文件模块有效==
 + 对于希望可以被其它模块访问的成员，我们就需要把这些公开的成员都挂载到exports接口对象中就可以了导出多个成员（必须在对象中）：
 
 **导出多个成员（必须在对象中）**
@@ -222,6 +222,32 @@ exports = module.exports
 ```
 
 所以说，想要导出单个对象时，必须使用`module.exports`
+
+### 原理
+
+创建一个文件moudel.js，内容如下
+
+```js
+console.log(arguments.callee + '')
+```
+
+控制台会输出
+
+```js
+function (exports, require, module, __filename, __dirname) {
+console.log(arguments.callee + '')
+}
+```
+
+所以模块中的代码实际上时包装在一个函数中执行的，并且在函数执行时，同事传递了5个实参
+
++ exports：用来将变量或函数暴露到外部
++ require：用来引入外部的模块
++ module： exports = module.exports
++ __filename：当前模块文件完整路径
++ __dirname：当前模块文件所在文件夹的名字
+
+==而我们通过 require 加载模块的时候返回的就是 export 对象==
 
 ## 4、模块加载规则
 
@@ -403,6 +429,8 @@ npm config list
 ```
 
 只要配置了上面的命令，以后都会从淘宝服务器下载
+
+![image-20210129175321744](img/image-20210129175321744.png)
 
 # 三、Express
 
