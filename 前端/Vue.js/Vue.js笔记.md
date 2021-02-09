@@ -2496,6 +2496,8 @@ var vm = new Vue({
   </style>
 ```
 
+
+
 # 九、webpack
 
 ## `nrm`的安装使用
@@ -2899,7 +2901,11 @@ To create a new project, run:
 vue create hello-world
 ```
 
-## Pulling 2.x Templates (Legacy)
+vue3 脚手架的真正配置放在了
+
+==node_modules -> @vue -> cli-service== 
+
+## Pulling 2.x Templates 
 
 Vue CLI >= 3 uses the same `vue` binary, so it overwrites Vue CLI 2 (`vue-cli`). If you still need the legacy `vue init` functionality, you can install a global bridge:
 
@@ -2908,6 +2914,59 @@ npm install -g @vue/cli-init
 # vue init now works exactly the same as vue-cli@2.x
 vue init webpack my-project
 ```
+
+# 十一、runtime-complier 和 runtime-only
+
++ runtime-compiler（v1）
+  template -> ast -> render -> vdom -> UI
+
+  ```js
+  new Vue({
+  	el: '#app',
+      template: '<App/>',
+      components: { App }
+  })
+  ```
+
++ runtime-only（V2）（==1.性能更高 2.下面的代码量更少==）
+  render -> vdom -> UI
+
+  ```js
+  // 1. 
+  new Vue({
+      el: '#app',
+      render: function(createElement){
+          // createElement 的三个参数: 1.元素标签 2.参数1的属性 3. 标签内部内容
+          return createElement('h2', {class: 'box'}, ['我靠',
+                                                     createElement('button', ['按钮'])])
+  
+      }
+  })
+  // 2. createElement 传递一个组件
+  const cpn = {
+      template: '<div>{{msg}}</div>',
+      data(){
+          return {
+              msg: '我是组件'
+          }
+      }
+  }
+  new Vue({
+      el: '#app',
+      render: function(createElement){
+          return createElement(cpm)
+      }
+  })
+  
+  // 3. 由此演化出
+  new Vue({
+      el: '#app',
+      render: h => h(App)
+  })
+  ```
+
+  
+
 
 # 案例
 

@@ -333,7 +333,7 @@ InetAddress[]hosts=InetAddress.getByName("www.baidu.com");
 Socket client = new Socket("服务器ip地址",[服务器开启的端口]);
 ```
 
-**3、InetAddress 封装计算机的IP地址和DNS，没有端口**
+**3、InetAddress 封装计算机的IP地址和主机名，没有端口**
 
 （1）静态方法获取对象：
 

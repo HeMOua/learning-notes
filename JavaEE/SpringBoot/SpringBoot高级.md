@@ -887,6 +887,417 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 </div>
 ```
 
+## 新，从下面开始
+
+## 1、权限管理的相关概念
+
+代码底层流程：重点看三个过滤器：
+
++ FilterSecurityInterceptor：是一个方法级的权限过滤器，基本位于过滤链的最底部。下面来看看源码
+
+  ```java
+  public class FilterSecurityInterceptor extends AbstractSecurityInterceptor implements Filter {
+  
+      @Override
+      public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+          throws IOException, ServletException {
+          invoke(new FilterInvocation(request, response, chain));
+      }
+  
+      public void invoke(FilterInvocation filterInvocation) throws IOException, ServletException {
+          if (isApplied(filterInvocation) && this.observeOncePerRequest) {
+              // filter already applied to this request and user wants us to observe
+              // once-per-request handling, so don't re-do security checking
+              filterInvocation.getChain().doFilter(filterInvocation.getRequest(),
+                                                   filterInvocation.getResponse());
+              return;
+          }
+          // first time this request being called, so perform security checking
+          if (filterInvocation.getRequest() != null && this.observeOncePerRequest) {
+              filterInvocation.getRequest().setAttribute(FILTER_APPLIED, Boolean.TRUE);
+          }
+          // ①
+          InterceptorStatusToken token = super.beforeInvocation(filterInvocation);
+          try {
+              // ②
+              filterInvocation.getChain().doFilter(filterInvocation.getRequest(),
+                                                   filterInvocation.getResponse());
+          }
+          finally {
+              super.finallyInvocation(token);
+          }
+          // ③
+          super.afterInvocation(token, null);
+      }
+  ```
+
+  可以看出 FilterSecurityInterceptor 它继承了 Filter，接着重点看 实现的 doFilter 方法，它调用了内部的invoke 
+
+  + ① 处的 `super.beforeInvocation(filterInvocation)` 标识查看之前的 filter 是否通过
+  + ② 处的`fi.getChain().doFilter(fi.getRequest(),fi.getResponse());` 表示调用真正的后台服务
+
++ ExceptionTranslationFilter：是个异常过滤器，用来处理在认证授权过程中抛出的异常。
+
++ UsernamePasswordAuthenticationFilter：对/login的POST请求做拦截，校验表单中用户名，密码。
+
+## 2、过滤器加载过程
+
+1. 使用 SpringSecurity 配置过滤器
+   + DelegatingFilterProxy
+     ![image-20210205150241351](img/image-20210205150241351.png)
+   + ![image-20210205150444738](img/image-20210205150444738.png)
+
+## 3、两个重要的接口
+
+### UserDetailsService
+
+UserDetailsService接口：查询数据库用户名和密码过程
+
+1. 创建类继承UsernamePasswordAuthenticationFilter，重写三个方法
+2. 创建类实现UserDetailService，编写查询数据过程，返回User对象，这个User对象是安全框架提供对象
+
+### PasswordEncoder
+
+PasswordEncoder数据加密接口，用于返回User对象里面密码加密
+
+```java
+public class SecurityConfig extends WebSecurityConfigurerAdapter{
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        // 强散列哈希加密实现
+        auth.userDetailsService(userDetailsService).
+            passwordEncoder(new BCryptPasswordEncoder());
+    }
+}
+```
+
+## 4、用户认证
+
+### 设置用户名密码
+
+1. 通过配置文件
+   application.properties
+
+   ```properties
+   spring.security.user.name=hemou
+   spring.security.user.password=root
+   ```
+
+2. 通过配置类
+
+   ```java
+   public class SecurityConfig extends WebSecurityConfigurerAdapter{
+       @Override
+       protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+           //  密码需要设置编码器
+           BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+           // 1、使用内存用户信息，作为测试使用
+           auth.inMemoryAuthentication().passwordEncoder(encoder)
+               .withUser("shitou").password(encoder.encode("123456")).roles("common")
+               .and()
+               .withUser("李四").password(encoder.encode("123456")).roles("vip");
+       }
+   }
+   ```
+
+   ==必须要通过 `auth.inMemoryAuthentication().passwordEncoder(encoder)` 设置密码加密方式，不然会报错==，或者通过 @Bean 的方式创建一个 PasswordEncoder
+
+3. 自定义实现类
+
+   1. 第一步：创建配置类，设置使用哪个 userDetailService 实现类
+
+      ```java
+      public class SecurityConfig extends WebSecurityConfigurerAdapter {
+      
+          /**
+           * 自定义用户认证逻辑
+           */
+          @Autowired
+          private UserDetailsService userDetailsService;
+      
+          /**
+           * 强散列哈希加密实现
+           */
+          @Bean
+          public BCryptPasswordEncoder bCryptPasswordEncoder() {
+              return new BCryptPasswordEncoder();
+          }
+      
+          @Override
+          protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+              auth.userDetailsService(userDetailsService).
+                  passwordEncoder(bCryptPasswordEncoder());
+          }
+      }
+      ```
+
+   2. 第二步：编写配置类，返回 User 对象，User 对象有用户名密码和操作权限
+
+      ```java
+      @Service("userDetailsService")
+      public class UserDetailServiceImpl implements UserDetailsService {
+      
+          @Autowired
+          private ISysUserService userService;
+      
+          @Override
+          public UserDetails loadUserByUsername(String username) throws 
+              UsernameNotFoundException {
+              List<GrantedAuthority> auths = AuthorityUtils.
+                  commaSeparatedStringToAuthorityList("role");
+              return new User("marray", new BCryptPasswordEncoder().encode("1234"), auths);
+          }
+      }
+      ```
+
+      + 首先要注意 @Service 要写上 service 的name，如 @Service("userDetailsService")，这样才能在前面的 SecurityConfig 成功注入进去
+      + loadUserByUsername 要求返回一个 UserDetail，这里有两种做法
+        + 编写一个实现 UserDetail 的类
+        + 使用 spring security 内置的一个 User 类，它本身实现了 UserDetail 这个接口
+      + 在本例中 User 的构造方法接受三个参数，用户名、加密后的密码和权限，注意权限不能为空，这里就随便写了一个权限
+
+### 自定义登录退出页
+
+**SecurityConfig.java**
+
+```java
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    /**
+     * 用户授权管理自定义配置
+     * @param http
+     * @throws Exception
+     */
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // 自定义用户授权管理
+        http.authorizeRequests()
+                .antMatchers("/", "/index").permitAll()
+                // 需要对static文件夹下静态资源进行统一放行
+                .antMatchers("/login/**").permitAll()
+                .antMatchers("/detail/common/**").hasRole("common")
+                .antMatchers("/detail/vip/**").hasRole("vip")
+                .anyRequest().authenticated();
+
+        // 自定义用户登录控制
+        http.formLogin()
+                .loginPage("/userLogin")
+            	.loginProcessingUrl("/user/login").permitAll() // controller 处理路径
+                .usernameParameter("name").passwordParameter("pwd")
+                .defaultSuccessUrl("/") // 成功转到页面
+                .failureUrl("/userLogin?error");        
+        
+        // 自定义用户退出控制
+        http.logout()
+                .logoutUrl("/mylogout")
+                .logoutSuccessUrl("/");
+        
+        // 可以关闭Spring Security默认开启的CSRF防护功能
+        http.csrf().disable();
+    }
+}
+```
+
+## 5、用户授权
+
+### 配置
+
+**1、hasAuthority()** 
+
+如果当前的主体具有指定的权限，则返回true，否则返回false
+
+1. 在配置类中设置当前访问地址需要哪些权限
+
+   SecurityConfig.java
+
+   ```java
+   http.authorizeRequests().antMatchers("/user").hasAuthority("admin")
+   ```
+
+2. 在 UserDetailService，把返回的 User 对象设置权限
+
+   ```java
+   List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityList("role");
+   return new User("marray", new BCryptPasswordEncoder().encode("1234"), auths);
+   
+   ```
+
+**2、hasAnyAuthority()**
+
+和 hasAuthority() 类似，拥有其中一个权限即可访问 `hasAnyAuthority("admin,user")`，不同权限用逗号隔开
+
+**3、hasRole()**
+
+与 hasAuthority() 稍有不同，先看源码
+
+![image-20210205161848163](img/image-20210205161848163-1612518050254.png)
+
+他会自动给权限加上 `ROLE_` 的前缀，所以我们在分配权限时，要加上他
+
+```java
+List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_role");
+```
+
+**4、hasAnyRole()**
+
+与之前的类似
+
+### 注解
+
+#### @Secured
+
+判断用户具有某个角色，可以访问方法
+
+1. 开启注解功能
+
+   使用注解先要开启注解功能！可以在启动类上，也可以在配置类上添加
+
+   ```java
+   @EnableGlobalMethodSecurity(securedEnabled = true)
+   ```
+
+2. 在控制器方法上添加注解
+
+   ```java
+   @GetMapping("update")
+   @Security({”ROLE_sale“, "ROLE_manager"})
+   public String update(){
+   ```
+
+   判断是否具有角色，另外需要注意的是这里匹配的字符串需要添加前缀“ROLE_"
+
+#### @PreAuthorize
+
+在进入方法前进行权限验证
+
+1. 开启方法前后验证注解
+
+   ```java
+   @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+   ```
+
+   也就是 `prePostEnable = true`
+
+2. 在控制器方法上面添加注解
+
+   ```java
+   @GetMapping
+   @PreAuthorize("hasAnyAuthority('admin')")
+   public String update(){
+   ```
+
+#### @PostAuthorize
+
+在进入方法后进行权限验证
+
+1. 开始验证注解，略
+
+2. 在控制器方法上面添加注解
+
+   ```java
+   @GetMapping
+   @PostAuthorize("hasAnyAuthority('admin')")
+   public String update(){
+   ```
+
+#### @PreFilter
+
+进入控制器之前对数据进行过滤
+
+```java
+@GetMapping
+@PostAuthorize("hasAnyAuthority('admin')")
+@PreFilter(value = "filterObject.id%2==0")
+public String update(@RequestBody List<UserInfo> list){
+    list.forEach(t -> {
+		System.out.println(t.getId() + ":" + t.getName());
+    })
+```
+
+上述注解的作用就是，如果 UserInfo 的 id 能被 2 整除，就传递 list 中
+
+#### @PostFilter
+
+```java
+@GetMapping
+@PostAuthorize("hasAnyAuthority('admin')")
+@PreFilter(value = "filterObject.username=='admin'")
+public String update(@RequestBody List<UserInfo> list){ 
+    ArrayList<User> list = new ArrayList<>();
+    list.add(new User(1, "admin"));
+	list.add(new User(1, "user"));
+    return list
+}
+```
+
+上述注解的作用就是，留下 list 中 username 为 admin 的对象
+
+## 6、自定义403页面
+
+```java
+http.exceptionHandling().accessDeniedPage("unauth.html")
+```
+
+## 7、记住我自动登录
+
+#### 原理
+
+![image-20210205171354794](img/image-20210205171354794.png)
+
+![image-20210205170959435](img/image-20210205170959435.png)
+
+#### 实现
+
+1. 创建数据库表，或在第二步中自动建表
+
+2. 配置类，注入数据源，配置操作数据库对象
+
+   SecurityConfig.java
+
+   ```java
+   @Autowired
+   private DataSource dataSource;
+   
+   @Bean
+   public PersistentTokenRepository persistentTokenRepository(){
+       JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
+       jdbcTokenRepository.setDataSource(dataSource);
+       jdbcTokenRepository.setCreateTableOnStartup(true);
+       return jdbcTokenRepository;
+   }
+   ```
+
+3. 配置类自动登录
+
+   SecurityConfig.java
+
+   ```java
+   @Override
+   protected void configure(HttpSecurity http) throws Exception {
+       // 定制Remember-me记住我功能
+       http.rememberMe()
+           .rememberMeParameter("rememberme") // 默认 remember-me
+           .tokenValiditySeconds(200)// 单位秒
+           .tokenRepository(persistentTokenRepository()); // 对cookie信息进行持久化管理
+   ```
+
+## 8、CSRF
+
+### CSRF的原理
+
+​	CSRF攻击原理比较简单，例如Web A为存在CSRF漏洞的网站，Web B为攻击者构建的恶意网站，User C为Web A网站的合法用户。
+
+1. 用户C打开浏览器，访问受信任网站A，输入用户名和密码请求登录网站A；在用户信息通过验证后，网站A产生Cookie信息并返回给浏览器，此时用户登录网站A成功，可以正常发送请求到网站A；并且，此后从用户浏览器发送请求给网站A时都会默认带上用户的Cookie信息；
+
+2. 用户未退出网站A之前，在同一浏览器中，打开一个TAB页访问网站B；
+
+3. 网站B接收到用户请求后，返回一些攻击性代码，并发出一个请求要求访问第三方站点A；
+
+4. 浏览器在接收到这些攻击性代码后，根据网站B的请求，在用户不知情的情况下携带Cookie信息，向网站A发出请求。网站A并不知道该请求的最终发起者其实是由B发起的，所以会根据用户C的Cookie信息以C的权限处理该请求，导致来自网站B的恶意代码被执行。
+
+SpringSecurity的防CSRF的功能是开启的，一般也建议开启。
+
+从Spring Security4.0开始，默认情况下会启用CSRF保护，以防止CSRF攻击应用程序，Spring Security CSRF会针对PATCH，POST，PUT和DELETE方法进行防护。
+
 
 
 # 六、Spring Boot与分布式
@@ -894,3 +1305,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 # 七、Spring Boot与监控管理
 
 # 八、Spring Boot与部署
+
