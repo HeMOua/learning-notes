@@ -76,10 +76,10 @@ emulator-5554	device
 adb常用命令
 ---
 - 查看已连接的模拟器/设备的列表
-    
+  
     `adb devices`
 - 将命令发送至特定设备
- 
+
     `adb -s serial_number command `
 
     如果在多个设备可用时您未指定目标模拟器/设备实例就发出命令，那么 adb 将生成一个错误。
@@ -100,7 +100,7 @@ adb常用命令
     [unix域套接字介绍](https://www.cnblogs.com/pengdonglin137/p/3849012.html)
     
 - 将文件复制到设备/从设备复制文件
- 
+
     您可以使用 adb 命令 pull 和 push 将文件复制到模拟器/设备实例或从其中复制文件。与 install 命令不同（其仅将 APK 文件复制到特定位置），pull 和 push 命令允许您将任意目录和文件复制到模拟器/设备实例中的任意位置。
 
     要从模拟器或设备复制文件或目录（及其子目录），请使用
@@ -118,7 +118,7 @@ adb常用命令
 - 停止 adb 服务器
 
     在某些情况下，您可能需要终止 adb 服务器进程，然后重启它以解决问题（例如，如果 adb 不响应命令）。
-    要停止 adb 服务器，请使用 adb kill-server 命令。然后，您可以通过发出任意其他 adb 命令重启服务器。
+    要停止 adb 服务器，请使用 `adb kill-server` 命令。然后，您可以通过发出任意其他 adb 命令重启服务器。
     
 - 发出 shell 命令
 
@@ -156,6 +156,7 @@ adb常用命令
     List of devices attached
     device_ip_address:5555 device
     
+
 现在，您可以开始操作了！
 
 如果 adb 连接丢失：

@@ -993,7 +993,9 @@ devtool: 'eval-source-map'
 + eval-source-map（完整度高，内联速度快，脚手架默认使用）
 + eval-cheap-module-souce-map（错误提示忽略列但是包含其他信息，内联速度快）
 
+自注：
 
++ 开发用 `cheap-source-map`（若依项目就是这样）
 
 ## 生产环境优化
 
