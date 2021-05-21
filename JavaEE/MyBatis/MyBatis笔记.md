@@ -780,6 +780,14 @@ mybatis支持类型处理器：
 
 ## 6、mappers（映射器）
 
+```xml
+<!-- 使用相对于类路径的资源引用 -->
+<mappers>
+  <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
+  ...
+</mappers>
+```
+
 Mapper配置的几种方法：
 
 ### 1 `<mapper resource=" " />`

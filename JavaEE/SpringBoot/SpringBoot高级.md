@@ -1099,7 +1099,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ## 5、用户授权
 
-### 配置
+### 授权
+
+1. 角色授权：授权代码需要加ROLE_前缀，controller上使用时不要加前缀
+2. 权限授权：设置和使用时，名称保持一至即可
+
+```java
+@Component
+public class MyUserDetailService implements UserDetailsService {
+    
+  @Autowired
+  private PasswordEncoder passwordEncoder;
+
+  @Override
+  public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
+    User user = new User(name, passwordEncoder.encode("123456"),
+        AuthorityUtils.commaSeparatedStringToAuthorityList("read,ROLE_USER"));//设置权限和角色
+    // 1. commaSeparatedStringToAuthorityList放入角色时需要加前缀ROLE_，而在controller使用时不需要加ROLE_前缀
+    // 2. 放入的是权限时，不能加ROLE_前缀，hasAuthority与放入的权限名称对应即可
+    return user;
+  }
+}
+```
+
+
+
+### 判断
 
 **1、hasAuthority()** 
 
@@ -1145,7 +1170,7 @@ List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityLis
 
 #### @Secured
 
-判断用户具有某个角色，可以访问方法
+判断用户具有某个角色，只有具有相应角色才可以调用方法
 
 1. 开启注解功能
 
@@ -1159,7 +1184,7 @@ List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityLis
 
    ```java
    @GetMapping("update")
-   @Security({”ROLE_sale“, "ROLE_manager"})
+   @Security({"ROLE_sale", "ROLE_manager"})
    public String update(){
    ```
 
@@ -1189,7 +1214,7 @@ List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityLis
 
 在进入方法后进行权限验证
 
-1. 开始验证注解，略
+1. 开启验证注解，同上
 
 2. 在控制器方法上面添加注解
 

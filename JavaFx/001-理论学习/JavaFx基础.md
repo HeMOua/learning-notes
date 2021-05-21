@@ -196,6 +196,8 @@ Object[] obj = group.getChildren().toArray();//获取所有的子元素
 
 ## Menu（菜单）
 
+1、普通菜单、菜单项
+
 ```xml
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -237,6 +239,21 @@ menu.setOnHidden(new EventHandler<Event>() {
 ```
 
 meun显现事件、消失事件
+
+2、RadioMenuItem
+
+```java
+ToggleGroup tg = new ToggleGroup();
+RadioMenuItem rmi1 = new RadioMenuItem("RadioMenuItem1");
+RadioMenuItem rmi2 = new RadioMenuItem("RadioMenuItem2");
+RadioMenuItem rmi3 = new RadioMenuItem("RadioMenuItem3");
+rmi1.setToggleGroup(tg);
+rmi2.setToggleGroup(tg);
+rmi3.setToggleGroup(tg);
+rmi1.setSelected(true);
+```
+
+3、CheckMenuItem
 
 ## Tab（选项卡）
 
