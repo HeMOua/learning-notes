@@ -183,7 +183,35 @@ Docker的相关镜像可以去[网页](https://hub.docker.com)查看
 
 `docker exec -it [container-id|contain-name] bash`
 
-## 5、排错指南
+## 5、创建镜像
+
+### MySQL
+
+一般来说数据库容器不需要建立目录映射
+
+```shell
+docker run --name mysql -d -p 3306:3306 -e  MYSQL_ROOT_PASSWORD=root mysql
+```
+
+- –name：容器名，此处命名为`mysql`
+- -e：配置信息，此处配置mysql的root用户的登陆密码
+- -p：端口映射，此处映射 主机3306端口 到 容器的3306端口
+- -d：后台运行容器，保证在退出终端后容器继续运行
+
+如果要建立目录映射
+
+```shell
+duso docker run -p 3306:3306 --name mysql \
+-v /usr/local/docker/mysql/conf:/etc/mysql \
+-v /usr/local/docker/mysql/logs:/var/log/mysql \
+-v /usr/local/docker/mysql/data:/var/lib/mysql \
+-e MYSQL_ROOT_PASSWORD=123456 \
+-d mysql:5.7
+```
+
+- -v：主机和容器的目录映射关系，":"前为主机目录，之后为容器目录
+
+## 6、排错指南
 
 ### （1）访问docker中的mysql出错
 

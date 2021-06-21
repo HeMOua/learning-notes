@@ -384,3 +384,118 @@ public class IpUtils {
     }
 }
 ```
+
+## Servlet项目工具
+
+### CommUtil
+
+需要 beanutils
+
+```java
+public class CommonUtil {
+
+    /**
+     * 返回一个不重复的字符串
+     * @return
+     */
+    public static String uuid() {
+        return UUID.randomUUID().toString().replace("-", "").toUpperCase();
+    }
+
+    /**
+     * 把 map 转换成对象
+     * @param map
+     * @param clazz
+     * @return 把Map转换成指定类型
+     */
+    @SuppressWarnings("rawtypes")
+    public static <T> T toBean(Map map, Class<T> clazz) {
+        try {
+            /*
+             * 1. 通过参数clazz创建实例
+             * 2. 使用BeanUtils.populate把map的数据封闭到bean中
+             */
+            T bean = clazz.newInstance();
+            ConvertUtils.register(new DateConverter(), java.util.Date.class);
+            BeanUtils.populate(bean, map);
+            return bean;
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public static class DateConverter implements Converter {
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Object convert(Class type, Object value) {
+            if(value == null) return null;//如果要转换成值为null，那么直接返回null
+            if(!(value instanceof String)) {//如果要转换的值不是String，那么就不转换了，直接返回
+                return value;
+            }
+            String val = (String) value;//把值转换成String
+
+            // 使用SimpleDateFormat进行转换
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            try {
+                return sdf.parse(val);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+}
+```
+
+### BaseServlet
+
+```java
+public class BaseServlet extends HttpServlet {
+
+    @Override
+    public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");//处理响应编码
+
+        String methodName = request.getParameter("method");
+        Method method = null;
+        try {
+            method = this.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
+        } catch (Exception e) {
+            throw new RuntimeException("您要调用的方法：" + methodName + "它不存在！", e);
+        }
+        
+        try {
+            String result = (String) method.invoke(this, request, response);
+            if (result != null && !result.trim().isEmpty()) {//如果请求处理方法返回不为空
+                if (result.startsWith("f:")) {
+                    request.getRequestDispatcher(result.replaceFirst("f:", "")).forward(request, response);
+                } else if (result.startsWith("r:")) {
+                    response.sendRedirect(request.getContextPath() + result.replaceFirst("d:", ""));
+                } else {
+                    response.getWriter().write(result);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected void startPage(HttpServletRequest request) {
+        int pageNum = getParameterToInt(request, "pageNum", 0);
+        int pageSize = getParameterToInt(request, "pageSize", 10);
+        PageHelper.startPage(pageNum, pageSize);
+    }
+
+    private int getParameterToInt(HttpServletRequest request, String key, int defaultValue) {
+        int value = defaultValue;
+        String param = request.getParameter(key);
+        if (param != null && !param.trim().isEmpty()) {
+            try {
+                value = Integer.parseInt(param);
+            } catch (Exception ignore) {}
+        }
+        return value;
+    }
+}
+```
+
