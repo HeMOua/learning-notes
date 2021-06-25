@@ -1019,10 +1019,30 @@ class 类名:
 
 类的组成：
 
-+ 类属性
++ 构造方法：
+  + `__init__(self)`
+
++ 类属性：
+
+  + 定义在 Class 内，类似于JS中的原型属性
+
+  + 通过`类名.类属性`即可调用，如下
+
+    ```python
+    print(Student.navtive_place)
+    ```
+
++ 类方法：
+
+  + 需要通过`@classmethod`修饰，方法第一个参数为`cls`，表示类对象
+
 + 实例方法
+
+  + 不需要修饰，方法第一个参数为`self`，表示当前实例对象
+
 + 静态方法
-+ 类方法
+
+  + 需要`@staticmethod`修饰，但是方法默认不需要传递参数
 
 ```python
 class Student:
@@ -1056,7 +1076,19 @@ stu = Student()
 Student.eat(stu)
 ```
 
+**动态绑定属性和方法**
 
+```python
+stu = Student()
+stu.gender = '女'
+
+def show():
+    pass
+
+stu.show = show()
+```
+
+在上面给
 
 ## 拓展
 
@@ -1110,10 +1142,3 @@ print(list(r)) # [2, 3, 4, 5, 6, 7, 8, 9]
 | pendown()                            | 落下画笔                       |
 | pencolor()                           | 画笔颜色                       |
 | done()                               | 停止绘画，并保持窗体不关闭     |
-
-
-
-
-
-
-

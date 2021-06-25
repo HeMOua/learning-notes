@@ -1,7 +1,5 @@
 [TOC]
 
-![autohotkey](F:/MyRepository/LearningNotes/AutoHotKey/img/autohotkey.png)
-
 # AutoHotKey
 
 ## 一、热键&热字符串
@@ -97,3 +95,4 @@ msgbox % config.keys
 ### 7、#include
 
 通过指令包含的文件，如果想要其按照自己想的顺序去执行，最好要加上`gosub`与标签，不然会发生意想不到的结果，比如`lib_init.ahk`里面的代码执行完后，最好添加`gosub`跳转到指定标签。
+

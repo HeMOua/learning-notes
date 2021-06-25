@@ -8,7 +8,7 @@
 
 ### 修改HTML默认语言为中文
 添加如下设置
-```
+```json
 "emmet.variables": {
     "lang": "zh_CN",
     "charset": "UTF-8"
@@ -62,6 +62,26 @@
 ![](img/1491349-20210209185104901-855874866.png)
 
 这样就可以使用 `shift + alt + F` 修复代码了
+
+### jsconfig.json
+
+当我们配置了路径昵名时，编译器就不能对昵名开头的文件进行智能提示了，如下方法可解决
+
+在项目根目录，说通俗点，就是和 package.json 同一个文件夹下，创建一个名为 `jsconfig.json` 的文件，内容如下
+
+```js
+{ 
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+        "@/*": ["src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+重点是 `paths` 的配置，它可以将 `@/` 开头的文件路径映射成我们想要的路径
 
 ————————————
 更多设置参考[文档](https://code.visualstudio.com/docs/editor/codebasics)
