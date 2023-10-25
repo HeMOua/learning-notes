@@ -17,7 +17,7 @@ sudo tar -zxvf jdk-8u321-linux-x64.tar.gz -C /usr/local/java
 
 输入`vim /etc/profile`进入编辑，在文件末尾添加
 
-```
+```shell
 export JAVA_HOME=/usr/local/java/jdk1.8_321
 export JRE_HOME=${JAVA_HOME}/jre
 export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib

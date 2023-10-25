@@ -1,8 +1,19 @@
 # SpringSecurity认证流程
 
+> 最近在学习 Ruoyi 后台管理框架源码，看到了关于 SpringSecurity 安全认证方面的东西，感觉不易理解，因此花了点时间时间看了源码，深入了解一下认证流程
+
 ## SpringSecurity配置
 
-SecurityConfig.java
+我们需要做一定的配置才能让 SpringSecurity 的安全认证起到作用，下面我们定义一个 `SecurityConfig.java` 类，它继承了 `WebSecurityConfigurerAdapter`，如下：
+
+```java
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter{
+    ...
+}
+```
+
+Step.1）同时需要重写它的 `configure(HttpSecurity http)` 方法：
 
 ```java
 @Override
@@ -21,15 +32,36 @@ protected void configure(HttpSecurity http) throws Exception {
 }
 ```
 
-从上面可以看到我们设置了放行 `/login`和 `/captchaImage` 请求，而其他请求就需要通过认证才可访问。下面正式分析登录认证流程
+配置的相关解释如下：
 
-## 登录认证
++ 项目是前后端分离的，无需用到 session，因此修改与 session 相关的配置
++ 定义哪些请求需要进行认证，哪些请求可以放行
++ 定义过滤器（**重要，如何从请求中拿到认证信息就靠它了**）
+  + 在项目中过滤器 `authenticationTokenFilter` 继承了 `OncePerRequestFilter` 
+  + 继承了 `OncePerRequestFilter` 的类在每次请求只执行一次
 
-首先分析一下流程
+Step.2）此外我们还需要重写的它的 `configure(AuthenticationManagerBuilder auth)` 方法：
 
-1、前端填写完表单数据后，发送请求 `[post] /login`，传递 username、password、code、uuid这四个数据
+```java
+@Override
+protected void configure(AuthenticationManagerBuilder auth) throws Exception
+{
+    auth.userDetailsService(userDetailsService)
+        .passwordEncoder(bCryptPasswordEncoder());
+}
+```
 
-2、后端收到 `[post] /login`请求，来到相应的 controller 处理方法
+在这里我们使用了一个 `UserDetailsService` 对象（**重要，判断用户认证是否成功也就是账号密码是否正确就靠它了**）
+
+***小总结***：目前我们提到了两个重要，下面的文章就是围绕这两个*重要*进行展开的。下面我们将先阐述用户认证流程，然后在梳理如何拿到认证信息。
+
+## 用户认证流程
+
+用户认证所关注是**用户所输入的账号信息是否正确**，如果账号信息正确将返回一个凭证，下面的认证流程将围绕这个关注点展开。
+
+### 「发送认证请求」
+
+我们发送请求 `[post] /login`，传递 username、password 等数据到服务器，服务器收到请求，来到相应的 controller 处理方法
 
 ```java
 @RestController
@@ -47,9 +79,11 @@ public class SysLoginController {
     }
 ```
 
-在这里调用 loginService 的 login方法，其中内部是具体的验证登录逻辑，验证通过后返回一个token，然后回传给前端。前端这时就可以将token数据存入本地了
+在这里调用 loginService 的 login方法，其中内部是具体的验证登录逻辑，验证通过后返回一个 token，也就是一个凭证，用来表示我们已近认证成功（登录成功）。
 
-3、接下来进入 `loginService.login()`内，进行详细分析
+### 「调用认证方法」
+
+接下来进入 `loginService.login()`内
 
 ```java
 @Component
@@ -59,8 +93,6 @@ public class SysLoginService {
     @Autowired private AuthenticationManager authenticationManager;
     
     public String login(String username, String password, String code, String uuid) {
-        String verifyKey = Constants.CAPTCHA_CODE_TAG + uuid;
-        String verifyCode = redisCache.getCacheObject(verifyKey);
         ...省去验证码校验逻辑，校验失败会抛出异常
             
         Authentication authenticate = null;
@@ -80,36 +112,33 @@ public class SysLoginService {
 }
 ```
 
-3.1 首先进行验证码校验逻辑，不通过时会抛出异常
+其中 `authenticationManager.authenticate()` 就是我们需要调用的认证方法，如果失败则抛出异常。
 
-3.2 通过 `AuthenticationManager` 的`authenticate()`获取认证信息
+这个方法以一个 `UsernamePasswordAuthenticationToken` 类作为参数，它拥有两个构造方法，如下：
 
-下面来详细分析一下 `authenticationManager.authenticate()`的**认证过程**
++ 只有两个参数的构造方法表示「当前没有认证」
 
-在**分析之前**先来了解一下 `UsernamePasswordAuthenticationToken` 这个类，它拥有两个构造方法
+  ```java
+  public UsernamePasswordAuthenticationToken(Object principal, Object credentials)
+  ```
 
-```java
-// 1、只有两个参数的构造方法表示[当前没有认证]
-public UsernamePasswordAuthenticationToken(Object principal, Object credentials)
-// 2、拥有三个参数的构造方法表示[当前已经认证完毕]
-public UsernamePasswordAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities)
-```
++ 有三个参数的构造方法表示「当前已经认证完毕」，后面校验成功后会用到它
 
-![image-20210211230717227](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111209270-25593274.png)
+  ![image-20210211230717227](img/1491349-20210212111209270-25593274.png)
 
-下面**开始分析认证过程**
+### 「源码分析认证方法」
 
-![png](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111214429-1207745914.png)
+![png](img/1491349-20210212111214429-1207745914.png)
 
+上面的流程图就是认证方法的一个大概过程，下面我们将通过源码来查看这个认证方法 `AuthenticationManager.authenticate()` 到底干了什么（*深入源码调用堆栈有点啰嗦，可以直接看第5步的小总结*）。
 
+Step.1）实现了`AuthenticationMananger`的`ProviderManger`调用接口的`authenticate`方法
 
-1）实现了`AuthenticationMananger`的`ProviderManger`调用接口的`authenticate`方法
+![image-20210211221629377](img/1491349-20210212111218902-477924771.png)
 
-![image-20210211221629377](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111218902-477924771.png)
+Step.2）然后遍历所有的 AuthenticProvider，其中的`supports`方法用来判断 `provider` 是否支持 `toTest`。
 
- 2）然后遍历所有的 AuthenticProvider，其中的`supports`方法，返回时一个boolean值，参数是一个Class，就是根据Token的类来确定用什么Provider来处理
-
-而源码中的toTest类，就是我们认证传递的 `UsernamePasswordAuthenticationToken`，而他对应的provider就是`AbstractUserDetailsAuthenticationProvider`
+而源码中的 `toTest` 类，就是我们认证传递的 `UsernamePasswordAuthenticationToken`，通过遍历我们发现 `AbstractUserDetailsAuthenticationProvider` 支持 `UsernamePasswordAuthenticationToken`，判断`provider`是否合适的源码如下：
 
 AbstractUserDetailsAuthenticationProvider.java
 
@@ -120,21 +149,27 @@ public boolean supports(Class<?> authentication) {
 }
 ```
 
-3）找到合适的Provider后，在本例中也即是AbstractUserDetailsAuthenticationProvider（抽象类），会调用provider 的authenticate 方法
+Step.3）找到合适的Provider后，在本例中也即是AbstractUserDetailsAuthenticationProvider（抽象类），会调用provider 的authenticate 方法
 
-![image-20210211224205852](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111224769-231714021.png)
+![image-20210211224205852](img/1491349-20210212111224769-231714021.png)
 
-4）从下面可以看到  retrieveUser 方法返回一个 UserDetails
+Step.4）从下面可以看到  retrieveUser 方法返回一个 UserDetails
 
-![image-20210211224415630](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111229541-672939290.png)
+![image-20210211224415630](img/1491349-20210212111229541-672939290.png)
 
-5）接着深入，可以发现 DaoAuthenticationProvider 继承了 AbstractUserDetailsAuthenticationProvider，所以DaoAuthenticationProvider 才是真正的实现类，他会调用 retrieveUser  方法，接着调用 loaderUserByUsername() 方法
+Step.5）接着深入，可以发现 DaoAuthenticationProvider 继承了 AbstractUserDetailsAuthenticationProvider，所以DaoAuthenticationProvider 才是真正的实现类，他会调用 retrieveUser  方法，接着调用 loaderUserByUsername() 方法
 
-![image-20210211224719481](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111232769-661828572.png)
+![image-20210211224719481](img/1491349-20210212111232769-661828572.png)
 
-看到 loaderUserByUsername()，应该就很熟悉了，因为这就是我们自己实现 `UserDetailsService` 接口，自定义的认证过程
+看到 loaderUserByUsername()，应该就很熟悉了，因为这就是我们自己实现 `UserDetailsService` 接口，自定义的认证过程。
 
-6）接着看我们自定义的 UserDetailServiceImpl 
+**小总结**：源码分析了一堆，其实这个**认证方法的真正目的是调用 `UserDetailsService` 类的 `loaderUserByUsername()`**
+
+### 「实现校验逻辑」
+
+文章开头我们提到了两个重要，第二个重要就是 `UserDetailsService`，认证就是通过它的 `loaderUserByUsername()` 方法是否认证成功。
+
+ `UserDetailsService` 是一个接口，同时要求我们返回一个 `UserDetail` 对象，我们需要自己实现认证校验逻辑，如下：
 
 ```java
 @Service("userDetailsService")
@@ -165,17 +200,30 @@ public class UserDetailServiceImpl implements UserDetailsService {
 }
 ```
 
-上面就是我们自己的认证逻辑。通过一个唯一标识查询用户，在这里就是username，当所有校验都通过后就会调用 createLoginUser 方法，装填用户拥有的权限以及**从数据库中获取的密码**，返回一个 LoginUser 对象，而这个对象实现了 UserDetails接口。（创建token的方法以及LoginUser.java可以参考文末的相关代码）
+上面就是我们自己的认证逻辑：
 
-7）然后我们回看AbstractUserDetailsAuthenticationProvider 的 authenticate 方法
+1. 通过一个唯一标识 username 查询用户
+2. 当所有校验都通过后就会调用 createLoginUser 方法
+   + 装填用户拥有的权限以及**从数据库中获取的密码**，
+3. 返回一个 LoginUser 对象，而这个对象实现了 UserDetails接口。
 
-![image-20210211230406093](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111242458-1187130244.png)
+### 「源码分析校验逻辑」
 
-8）接着深入，可以发现`createSuccessAuthentication`方法创建了一个UsernamePasswordAuthenticationToken，并且他的构造方法有三个参数，这表明这个token是已近认证过后的
+下面我们通过源码查看获取到 `UserDetails` 后 SpringSecurity 还做了什么（*如果没看之前的源码分析可以直接看第2步的小总结*）
 
-![image-20210211230531473](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111246874-1801079482.png)
+Step.1）我们回看 AbstractUserDetailsAuthenticationProvider 的 authenticate 方法
 
-4、至此认证已经结束，我再回到 `loginService.login()`这个我们自己写的方法内，上面分析的8个步骤，也就是调用 `authenticationManager.authenticate()`的过程会返回一个 Authentication，然后就可以利用这个 Authentication 生成一个 token。
+![image-20210211230406093](img/1491349-20210212111242458-1187130244.png)
+
+Step.2）接着深入，可以发现`createSuccessAuthentication`方法创建了一个UsernamePasswordAuthenticationToken，并且他的构造方法**有三个参数**，这表明这个token是已近认证过后的
+
+![image-20210211230531473](img/1491349-20210212111246874-1801079482.png)
+
+**小总结**：认证成功后，我们调用 `UsernamePasswordAuthenticationToken` 具有三个参数的构造方法，也就是代表认证成功的构造函数，然后将构造的对象返回去。
+
+### 「认证结束」
+
+至此认证已经结束，我再回到 `loginService.login()`这个我们自己写的方法内，认证方法 `authenticationManager.authenticate()` 认证成功后会返回一个 Authentication，然后就可以利用这个 Authentication 生成一个 token。
 
 loginService.java
 
@@ -183,7 +231,7 @@ loginService.java
 return tokenService.createToken((LoginUser) authenticate.getPrincipal());
 ```
 
-5、接着回到前面第二步controller调用的 `loginService.login()`，这时它已近拿到了 token ，于是将其返回到前端。前端收到相应后，就可以把这个token存在本地，以后每次访问请求时都带上这个token 信息。
+接着回到前面第二步controller调用的 `loginService.login()`，这时它已近拿到了 token ，于是将其返回到前端。前端收到相应后，就可以把这个token存在本地，以后每次访问请求时都带上这个token 信息。
 
 ```java
 @PostMapping("login")
@@ -195,27 +243,29 @@ public AjaxResult login(String username, String password, String code, String uu
 }
 ```
 
-## 请求认证
+## 获取认证信息
 
-1、上面说到前端每次发送请求都带上这个 token，但是为啥带上这个 token，SpringSecurity就会认为此次请求已近认证通过了呢，别忘了，因为之前配置 SecurityConfig，如下
+文章开头提到了两个重要，下面我们将梳理第一个重要，也就是如何从请求中拿到认证信息。
+
+上面说到认证成功后每次发送请求都带上 token 信息，但是为啥带上这个 token 呢？在之前的 SpringSecurity 配置中有如下配置 
 
 ```java
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        ...
-        // 过滤请求
-        http.authorizeRequests()
-            .antMatchers("/login", "/captchaImage").anonymous()
-            .anyRequest().authenticated();
-        // 添加JWT filter,后面马上就讲
-        http.addFilterBefore(authenticationTokenFilter, 
-                             UsernamePasswordAuthenticationFilter.class);
-    }
+.antMatchers("/login", "/captchaImage").anonymous()
 ```
-因为我们设置了放行 `/login`请求，所以才没遭受拦截，而其他请求都是要被拦截的
 
-2、因此我们就要自定义一个JWT filter，使用 `addFilterBefore` 把它添加到过滤器列表中，下面来看我们写的 JWT过滤器
+因此对于 `/login`请求没遭受拦截，而其他请求都是要被拦截的。
+
+### 「拦截器」
+
+之前 `/login`  我们配置了不拦截，因此手动调用 `authenticationManager.authenticate()` 来进行认证，而现在被拦截的请求又是如何判断它是否认证过了呢？
+
+对于被拦截的请求，如果它带有 token，我们会手动将这个 token 转换为认证信息 `UsernamePasswordAuthenticationToken` 并放入本次请求的上下文中，否则啥事都不做。而我们文章开头所配置的
+
+```java
+http.addFilterBefore(authenticationTokenFilter,UsernamePasswordAuthenticationFilter.class);
+```
+
+拦截器就是起这个作用，具体实现如下（后面称这个为 jwtFilter）。
 
 JwtAuthenticationTokenFilter.java
 
@@ -245,224 +295,41 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 }
 ```
 
-1）TokenService#getLoginUser() 是我们编写的一个方法，可以从 request 中获取 token，然后再解析成LoginUser，也就是我们之前编写继承了UserDetails的类
+我们关注代码中 3.2）即可。在 token 正确后，我们使用用有三个参数的构造方法创建`UsernamePasswordAuthenticationToken` 对象，前面也说了，这代表已经经过认证，然后通过 `SecurityContextHolder.getContext().setAuthentication()` 为本次请求上下文设置一下认证信息。
 
-2）如果1）能解析成功，也就是loginUser不为空，就说明请求含带了token认证信息，又因为这是个前后端分离项目，`SecurityUtils.getAuthentication()`肯定获取不到当前请求的认证信息
+这样后面 SpringSecurity 看到存在这个认证信息就会判断本次请求已经认证成功。
 
-```java
-public static Authentication getAuthentication() {
-    return SecurityContextHolder.getContext().getAuthentication();
-}
-```
+### 「源码分析拦截流程」
 
-3）而没有认证信息，这次请求势必会被拦截下来，所以我们要手动加上这个认证信息
+> 为了更深刻的了解 SpringSecurity 内部是如何被拦截请求是否认证成功，我们接下来通过源码具体分析一下流程。
 
-3.1）我们先刷新一下token，也就是在redis缓存中更新一下到期时间（刷新token的方法可以参考文末的相关代码）
+再次之前先介绍一个类 `FilterSecurityInterceptor`：是一个方法级的权限过滤器，基本位于过滤链的最底部，因此请求到来时它一定会执行，下面来看看源码。
 
-3.2）然后创建UsernamePasswordAuthenticationToken，注意这是个有三个 参数的构造方法，前面也说了，这代表已经经过认证，然后 `SecurityContextHolder.getContext().setAuthentication();`设置一下认证信息
-
-这样每次带token的请求，都会有了认证信息，也就不会被拦截了
-
-3、
-
-> 但是为了更深刻的了解，我们接下来具体分析一下流程。
-
-再次之前先介绍一个类 `FilterSecurityInterceptor`：是一个方法级的权限过滤器，基本位于过滤链的最底部，下面来看看源码。
-
-![image-20210212102053438](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111253863-952441950.png)
+![image-20210212102053438](img/1491349-20210212111253863-952441950.png)
 
 下面来打个断点，查看一下
 
-![image-20210212102439157](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111257853-1567880337.png)
+![image-20210212102439157](img/1491349-20210212111257853-1567880337.png)
 
 这说明来到`beforeInvocation`方法时我们前面编写的jwtFilter已经被执行，认证信息已近被手动添加过了
 
-![image-20210212102758021](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111301333-1915938085.png)
+![image-20210212102758021](img/1491349-20210212111301333-1915938085.png)
 
 进入`beforeInvocation()`里面，由调试信息可以看到当前请求需要被认证
 
-![image-20210212103144116](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111304839-493673989.png)
+![image-20210212103144116](img/1491349-20210212111304839-493673989.png)
 
 接着我们进入`authenticateIfRequired`方法的内部
 
-![image-20210212103331881](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111309890-2103762999.png)
+![image-20210212103331881](img/1491349-20210212111309890-2103762999.png)
 
-因为我们之前jwtfilter手动添加了认证信息，所以`authenticateIfRequired`就直接返回了authentication，
+因为我们之前 jwtfilter 手动添加了认证信息，所以`authenticateIfRequired`就直接返回了authentication，表示认证通过。
 
-否则的还要进行`authenticationManager.authenticate();`进行验证，如果没有之前jwtfilter手动添加认证信息，那么中途一定会抛出异常，导致此次请求失败被拦截
+如果之前在 jwtfilter 被拦截的请求不存在 token，我们就不会手动设置认证信息，因此调用 `authenticationManager.authenticate();`进行验证时，中途一定会抛出异常，导致此次请求失败被拦截
 
 至此也没啥好讲了，filterInvocation.getChain().doFilter() 调用我们的后台服务了
 
-![image-20210212104009332](https://img2020.cnblogs.com/blog/1491349/202102/1491349-20210212111313880-319009086.png)
-
-## 相关代码
-
-### TokenService.java
-
-```java
-@Component
-public class TokenService {
-
-    protected static final long MILLIS_SECOND = 1000;
-    
-    protected static final long MILLIS_MINUTE = 60 * MILLIS_SECOND;
-
-    private static final long MILLIS_MINUTE_20 = 20 * 60 * 1000L;
-
-    // 令牌自定义标识
-    @Value("${token.header}")
-    private String header;
-
-    // 令牌秘钥
-    @Value("${token.secret}")
-    private String secret;
-
-    // 令牌有效期（默认30分钟）
-    @Value("${token.expireTime}")
-    private int expireTime;
-
-    @Autowired
-    private RedisCache redisCache;
-
-    /**
-     * 创建令牌
-     *
-     * @param loginUser 用户信息
-     * @return 令牌
-     */
-    public String createToken(LoginUser loginUser) {
-        String token = IdUtil.fastUUID();
-        loginUser.setToken(token);
-        refreshToken(loginUser);
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(Constants.LOGIN_TOKEN_KEY, token);
-        return createToken(claims);
-    }
-
-    /**
-     * 验证令牌有效期，相差不足20分钟，自动刷新缓存
-     *
-     * @param loginUser 登录用户
-     * @return 令牌
-     */
-    public void verifyToken(LoginUser loginUser) {
-        long expireTime = loginUser.getExpireTime();
-        long currentTime = System.currentTimeMillis();
-        if (expireTime - currentTime <= MILLIS_MINUTE_20) {
-            refreshToken(loginUser);
-        }
-    }
-
-    /**
-     * 刷新令牌有效期
-     *
-     * @param loginUser 登录信息
-     */
-    public void refreshToken(LoginUser loginUser) {
-        loginUser.setLoginTime(System.currentTimeMillis());
-        loginUser.setExpireTime(loginUser.getLoginTime() + expireTime * MILLIS_MINUTE);
-        // 根据uuid将loginUser缓存
-        String userKey = getTokenKey(loginUser.getToken());
-        redisCache.setCacheObject(userKey, loginUser, expireTime, TimeUnit.MINUTES);
-    }
-
-    /**
-     * 获取 token 的 redis 键前缀
-     *
-     * @param uuid
-     * @return
-     */
-    private String getTokenKey(String uuid) {
-        return Constants.LOGIN_TOKEN_TAG + uuid;
-    }
-
-    /**
-     * 从数据声明生成令牌
-     *
-     * @param claims 数据声明
-     * @return 令牌
-     */
-    private String createToken(Map<String, Object> claims) {
-        return Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, secret).compact();
-    }
-
-    /**
-     * 从令牌中获取数据声明
-     *
-     * @param token 令牌
-     * @return 数据声明
-     */
-    private Claims parseToken(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
-    }
-
-    /**
-     * 获取用户身份信息
-     *
-     * @return 用户信息
-     */
-    public LoginUser getLoginUser(HttpServletRequest request) {
-        // 获取请求携带的令牌
-        String token = getRespToken(request);
-        if (StringUtils.isNotEmpty(token)) {
-            Claims claims = parseToken(token);
-            // 解析对应的权限以及用户信息
-            String uuid = (String) claims.get(Constants.LOGIN_TOKEN_KEY);
-            String userKey = getTokenKey(uuid);
-            return redisCache.getCacheObject(userKey);
-        }
-        return null;
-    }
-
-    /**
-     * 获取请求token
-     *
-     * @param request
-     * @return token
-     */
-    private String getRespToken(HttpServletRequest request) {
-        String token = request.getHeader(this.header);
-        if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.REQ_TOKEN_PREFIX)) {
-            token = token.replace(Constants.REQ_TOKEN_PREFIX, "");
-        }
-        return token;
-    }
-}
-```
-
-### LoginUser.java
-
-```java
-public class LoginUser implements UserDetails {
-    private static final long serialVersionUID = 1821121071052157802L;
-
-    /** 用户唯一标识 */
-    private String token;
-
-    /** 登陆时间 */
-    private Long loginTime;
-
-    /** 过期时间 */
-    private Long expireTime;
-    ...
-    /** 权限列表 */
-    private Set<String> permissions;
-
-    /** 用户信息 */
-    private SysUser user;
-    ...
-    @Override
-    public String getPassword() {
-        return user.getPassword();
-    }
-
-    @Override
-    public String getUsername() {
-        return user.getUserName();
-    }
-    ...
-```
+![image-20210212104009332](img/1491349-20210212111313880-319009086.png)
 
 ## 参考
 

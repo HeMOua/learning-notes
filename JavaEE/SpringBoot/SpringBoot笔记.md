@@ -207,6 +207,8 @@ pets: [cat,dog,pig]
 
 ##  2、配置文件注入
 
+### 2.0 配置注入
+
 首先引入配置文件处理器，这样写配置时会有提示功能
 
 ```xml
@@ -228,14 +230,11 @@ user:
 
 注意yml配置中不能出现下划线，如果标签头出现下划线将会报错，属性出现的话可能会获取不到值。
 
+我们需要读取这个yaml文件的内容，为了字段一一对应，我们会专门为它创建一个实体类，比如下面的 User。
+
 ```java
 /**
  * 将配置文件中配置的每一个属性的值，映射到这个组件中
- * @ConfigurationProperties：告诉SpringBoot将本类中的所有属性和配置文件中相关的配置进行绑定；
- *      prefix = "user"：配置文件中哪个下面的所有属性进行一一映射
- *
- * 只有这个组件是容器中的组件，才能使用容器提供的@ConfigurationProperties功能；
- *
  */
 @Component
 @ConfigurationProperties(prefix = "user")
@@ -244,6 +243,10 @@ public class User {
     private String name;
     private String password;
 ```
+
+如果我们自己来读取 yaml 中的数据到这个实体类中就会十分的麻烦，Springboot 已经为我们想好了解决方案，那就是使用 `@ConfigurationProperties` 注解，它可以将类中的所有属性与配置文件中的相关配置进行绑定。
+
+为了避免混淆，这个注解还提供了一个 prefix 字段，只有在其下面的值才回自动注入到类中。要注意，只有这个**组件是容器中的组件，才能使用容器提供的@ConfigurationProperties功能**，因此我们要给这个配置类添加 `@Component` 注解
 
 ### 2.1 SpringBoot单元测试
 
@@ -262,6 +265,8 @@ public class SpringbootApplicationTests {
 ![1579340041907](img/1579340041907.png)
 
 ### 2.3 配置文件注入值校验
+
+通过给配置类加上 `@Validated` 注解，我们就可以使用一些校验注解了，比如email格式等等。。
 
 ```java
 @Component
@@ -2113,9 +2118,20 @@ public class HelloCommandLineRunner implements CommandLineRunner {
 
 **starter**
 
-1、确定此场景的依赖
+1）确定此场景的依赖
 
-2、如何编写自动配置
+2）如何编写自动配置
+
+1. 指定一个类为配置类
+
+   + 指定配置类生效的条件
+
+   + 指定自动配置类的顺序
+   + 给容器中加组件
+
+2. 结合xxxProperties来绑定相关的配置，让xxxPropertes生效
+
+3. **将需要启动就要加载的自动配置类，配置在META-INF/spring.factories**
 
 ```java
 @Configuration //指定一个类为配置类

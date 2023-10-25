@@ -1,5 +1,11 @@
 # Dubbo入门案例
 
+## Zookeeper 安装
+
+> Zookeeper 是 Dubbo 官方所推荐的一个注册中心
+
+参考 Zookeeper 学习笔记
+
 ## 需求
 
 假设有如下两个服务

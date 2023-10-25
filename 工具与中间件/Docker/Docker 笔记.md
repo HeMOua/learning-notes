@@ -597,3 +597,10 @@ Options:
 docker commit -a="angus" -m="angus's tomcat remove doc" b2a3d7b67722  angustomcat:1.0
 ```
 
+## 13、查看容器挂载的目录
+
+```cmd
+docker inspect container_name | grep Mounts -A 20
+```
+
+`-A 20` 表示需要查看的行数
