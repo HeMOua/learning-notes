@@ -23,17 +23,21 @@ Compose项目由Python编写，实现上调用了 Docker 服务提供的API来�
 
 ## 安装
 
+1）从 github
+
 ```shell
 $ sudo curl -L "https://github.com/docker/compose/releases/download/v2.2.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 ```
 
 要安装其他版本的 Compose，请替换 v2.2.2。
 
-或者使用下面的国内链接
+2）或者使用下面的国内链接
 
 ```shell
 $ curl -L https://get.daocloud.io/docker/compose/releases/download/v2.4.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
 ```
+
+3）或者从 https://github.com/docker/compose 的 release 中直接下载合适的
 
 将可执行权限应用于二进制文件：
 

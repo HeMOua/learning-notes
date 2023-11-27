@@ -67,7 +67,7 @@ systemctl stop docker
 curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 ```
 
-也可以使用国内 daocloud 一键安装命令：
+~~也可以使用国内 daocloud 一键安装命令：~~（没用了）
 
 ```
 curl -sSL https://get.daocloud.io/docker | sh
@@ -80,7 +80,7 @@ curl -sSL https://get.daocloud.io/docker | sh
 1、首先修改`daemon.json` 文件
 
 ```shell
-[root@localhost ~]# vi /etc/docker/daemon.json
+[root@localhost ~]$ vi /etc/docker/daemon.json
 ```
 
 2、替换成以下内容
@@ -100,12 +100,12 @@ service docker restart
 演示如下
 
 ```shell
-[root@localhost ~]# vi /etc/docker/daemon.json
-[root@localhost ~]# cat /etc/docker/daemon.json
+[root@localhost ~]$ vi /etc/docker/daemon.json
+[root@localhost ~]$ cat /etc/docker/daemon.json
 {
 "registry-mirrors": ["https://mj9kvemk.mirror.aliyuncs.com"]
 }
-[root@localhost ~]# service docker restart
+[root@localhost ~]$ service docker restart
 Redirecting to /bin/systemctl restart docker.service
 ```
 
@@ -500,7 +500,7 @@ docker run -d --name myredis -p 6379:6379 redis --requirepass "mypassword"
 
 要以非root用户身份运行Docker命令而不添加[ `sudo` ](https://www.myfreax.com/sudo-command-in-linux/)，您需要将用户添加到`docker`组。该组是在Docker CE软件包安装期间创建的。
 
-为此，请运行以下命令：
+~~为此，请运行以下命令：~~（没用）
 
 ```bash
 sudo usermod -aG docker $USER
@@ -513,7 +513,6 @@ sudo usermod -aG docker $USER
 或者
 
 ```
-sudo groupadd docker #添加docker用户组
 sudo gpasswd -a $USER docker #将当前用户添加至docker用户组
 newgrp docker #更新docker用户组
 ```

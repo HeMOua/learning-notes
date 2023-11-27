@@ -7,7 +7,7 @@
 2、解压
 
 ```shell
-sudo mkdir -p /usr/local/java/jdk1.8_321 # 创建目录
+# sudo mkdir -p /usr/local/java/jdk1.8_321 # 创建目录
 # sudo tar -zxvf jdk-8u321-linux-x64.tar.gz -C /usr/local/java/jdk1.8_321
 # 或者，推荐下面的，貌似会创建父文件夹
 sudo tar -zxvf jdk-8u321-linux-x64.tar.gz -C /usr/local/java

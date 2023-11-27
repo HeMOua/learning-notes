@@ -308,7 +308,7 @@ treeCache.start();
 
 #### 简介
 
-在我们进行单机应用开发，涉及并发同步的时候，我们往往釆用 synchronized或者Lok的方式来解决多线程间的代码同步问题，这时多线程的运行都是在同一个JVM之下，没有任何问题。
+在我们进行单机应用开发，涉及并发同步的时候，我们往往釆用 synchronized 或者 Lock 的方式来解决多线程间的代码同步问题，这时多线程的运行都是在同一个JVM之下，没有任何问题。
 
 但当我们的应用是分布式集群工作的情况下，属于多JVM下的工作环境，跨JVM之间已经无法通过多线程的锁解决同步问题。
 
@@ -409,5 +409,5 @@ public class Ticket12306 implements Runnable {
 }
 ```
 
-注意创建`CuratorFramework`对象时一定要先调用`start()`方法:disappointed_relieved:
+注意创建`CuratorFramework`对象时一定要先调用`start()`方法
 

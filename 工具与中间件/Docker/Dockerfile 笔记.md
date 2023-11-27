@@ -73,6 +73,10 @@ RUN /bin/bash -c 'source $HOME/.bashrc; echo $HOME'
 
 ### EXPOSE
 
+> `EXPOSE` 命令只是一个元数据，用于提供关于容器内部服务的信息，以便在容器运行时时可以查看到容器所侦听的端口。
+>
+> 但并不会实际打开或映射这些端口。它为容器的网络通信提供了一些方便的信息。
+
 ```dockerfile
 EXPOSE <port> [<port>/<protocol>...]
 ```

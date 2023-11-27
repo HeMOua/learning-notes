@@ -9,12 +9,12 @@
 Description=Zookeeper Service
 After=network.target
 [Service]
-Environment="JAVA_HOME=/usr/local/java/jdk1.8.0_371"
+EnvironmentFile=/etc/environment
 Type=forking
-ExecStart=bash /home/chenchao/ServerTools/zookeeper/bin/zkServer.sh start
-ExecReload=bash /home/chenchao/ServerTools/zookeeper/bin/zkServer.sh start
-ExecStop=bash /home/chenchao/ServerTools/zookeeper/bin/zkServer.sh stop
-WorkingDirectory=/home/chenchao/ServerTools/zookeeper/bin
+ExecStart=bash zkServer.sh start
+ExecReload=bash zkServer.sh start
+ExecStop=bash zkServer.sh stop
+WorkingDirectory=/usr/local/zookeeper/zookeeper-3.4.11/bin
 
 #文件路径名
 Restart=always

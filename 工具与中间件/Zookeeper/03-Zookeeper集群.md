@@ -234,7 +234,7 @@ Mode为follower表示是**跟随者**（从）
 + Observer 观察者：
   1. 处理客户端非事务请求，转发事务请求给Leader服务器
 
-![集群角色](img/图片1.png)
+<img src="img/图片1.png" alt="集群角色" style="zoom:150%;" />
 
 例子：
 

@@ -4,17 +4,23 @@
 
 3、设置自启
 
+```
+sudo vi /etc/systemd/system/kafka.service
+```
+
+
+
 ```ini
 [Unit]
 Description=Kafka Service
 After=network.target
 [Service]
-Environment="JAVA_HOME=/usr/local/java/jdk1.8.0_371"
+EnvironmentFile=/etc/environment
 Type=forking
 ExecStart=bash bin/kafka-server-start.sh -daemon config/server.properties
 ExecReload=bash bin/kafka-server-start.sh -daemon config/server.properties
 ExecStop=bash bin/kafka-server-stop.sh -daemon config/server.properties
-WorkingDirectory=/home/chenchao/ServerTools/kafka_2.13-2.8.0/
+WorkingDirectory=/usr/local/kafka/kafka_2.13-2.7.2/
 
 #文件路径名
 Restart=always
