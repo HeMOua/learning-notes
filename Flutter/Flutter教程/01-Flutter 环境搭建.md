@@ -38,6 +38,33 @@ PUB_HOSTED_URL: https://mirrors.tuna.tsinghua.edu.cn/dart-pub
 
 5、使用`flutter doctor`检查是否存在问题
 
+## IDE配置
+
+### Android Studio
+
+1、安装 Flutter 和 Dart 插件
+
++ `Flutter`插件： 支持Flutter开发工作流 (运行、调试、热重载等)。
++ `Dart`插件： 提供代码分析 (输入代码时进行验证、代码补全等)。
+
+2、创建Flutter应用
+
+1. 选择 **File>New Flutter Project** 。
+2. 选择 **Flutter application** 作为 project 类型, 然后点击 Next。
+3. 输入项目名称 (如 `myapp`)，然后点击 Next。
+4. 点击 **Finish**。
+5. 等待Android Studio安装SDK并创建项目。
+
+上述命令创建一个Flutter项目，项目名为myapp，其中包含一个使用[Material 组件 (opens new window)](https://material.io/guidelines/)的简单演示应用程序。
+
+在项目目录中，您应用程序的代码位于 `lib/main.dart`。
+
+### VS Code
+
+1、安装 flutter 插件
+
++ 插件商城搜索 `flutter`，然后点击 `install`
+
 ## Flutter应用
 
 ```
@@ -66,7 +93,7 @@ main.dart里面的
 
 ```dart
 void main(){
-runApp(MyApp());
+	runApp(MyApp());
 }
 
 // 也可以简写

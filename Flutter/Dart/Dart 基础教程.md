@@ -205,6 +205,22 @@ var isEvery = myList.every((value) {
 
 ## 函数
 
+### 单表达式函数
+
+如何函数内部只有一条表达式
+
+```dart
+bool isNoble(int atomicNumber) {
+    return atomicNumber == 1;
+}
+```
+
+可以简写为
+
+```dart
+bool isNoble(int atomicNumber) => atomicNumber == 1;
+```
+
 ### 可选参数
 
 ```dart
@@ -271,6 +287,17 @@ class Person {
     Person.info(String name) {
         this.name = name
     }
+}
+
+class Car {
+    String? type;
+    
+    Car({ this.type });
+    
+	Car(String type) {
+        this.type = type;
+    }
+    // 上面两个构造函数是等效的
 }
 
 void main {
