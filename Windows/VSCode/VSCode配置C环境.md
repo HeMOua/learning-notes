@@ -65,7 +65,7 @@ code .
 
 现在粘贴此源代码：
 
-```
+```c++
 #include <iostream>
 #include <vector>
 #include <string>
