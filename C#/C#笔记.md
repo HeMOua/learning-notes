@@ -287,7 +287,7 @@ File.Delete(path);
 File.Move(source, target);
 File.Copy(source, target);   // 若文件存在则报错
 File.Copy(source, target, true); // 若文件存在则覆盖
-File。Exists();
+File.Exists();
 
 // 读取文件
 string path = @"C:\Users\fangq\Desktop\1.txt";

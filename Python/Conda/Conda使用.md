@@ -68,3 +68,14 @@ custom_channels:
   simpleitk: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
 ```
 
+## 修改 envs、pkgs 路径
+
+编辑 `~/.condarc`
+
+```
+envs_dirs:
+  - D:\ProgramData\miniconda3\envs
+pkgs_dirs:
+  - D:\ProgramData\miniconda3\pkgs
+```
+

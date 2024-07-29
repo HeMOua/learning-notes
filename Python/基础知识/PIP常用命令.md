@@ -144,3 +144,31 @@ pqi ls
 pqi use <name>
 ```
 
+## pip配置文件位置 
+
+（1）**Windows:** (可能在以下三个位置之一，应该是取决于安装方式)
+
+- `C:\ProgramData\pip\pip.ini`（全局）
+
+- `C:\Users\YOURUSERNAME\pip\pip.ini`（单个用户配置）
+
+- `C:\Users\YOURUSERNAME\AppData\Roaming\pip\pip.ini`（单个用户配置）
+
+我是仅为当前用户安装的（无管理员权限），pip.ini在 
+
+```
+C:\Users\YOURUSERNAME\AppData\Roaming\pip\pip.ini
+```
+
+（2）**Linux:**
+
+```
+~/.pip/pip.conf
+```
+
+若没有，可以用以下命令创建
+
+```
+mkdir -p ~/.pip && touch ~/.pip/pip.conf
+```
+

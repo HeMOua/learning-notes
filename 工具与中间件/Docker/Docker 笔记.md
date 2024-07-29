@@ -87,7 +87,7 @@ curl -sSL https://get.daocloud.io/docker | sh
 
 ```json
 {
-"registry-mirrors": ["https://mj9kvemk.mirror.aliyuncs.com"]
+"registry-mirrors": ["https://u6jsxuzl.mirror.aliyuncs.com"]
 }
 ```
 
@@ -127,7 +127,67 @@ Redirecting to /bin/systemctl restart docker.service
 }
 ```
 
+### 3.3 Docker 使用代理
 
+https://docs.docker.com/config/daemon/proxy/#httphttps-proxy
+
+**方法一**，配置`daemon.json`文件：
+
+`vi /etc/docker/daemon.json`
+
+```python
+{
+  "proxies": {
+    "http-proxy": "http://proxy.example.com:3128",
+    "https-proxy": "https://proxy.example.com:3129",
+    "no-proxy": "*.test.example.com,.example.org,127.0.0.0/8"
+  }
+}
+```
+
+**方法二**
+
+创建 dockerd 相关的 systemd 目录，这个目录下的配置将覆盖 dockerd 的默认配置
+
+```
+$ sudo mkdir -p /etc/systemd/system/docker.service.d
+```
+
+新建配置文件 `/etc/systemd/system/docker.service.d/http-proxy.conf`，这个文件中将包含环境变量
+
+```ini
+[Service]
+Environment="HTTP_PROXY=http://proxy.example.com:80"
+Environment="HTTPS_PROXY=https://proxy.example.com:443"
+```
+
+如果你自己建了私有的镜像仓库，需要 dockerd 绕过代理服务器直连，那么配置 NO_PROXY 变量：
+
+```ini
+[Service]
+Environment="HTTP_PROXY=http://proxy.example.com:80"
+Environment="HTTPS_PROXY=https://proxy.example.com:443"
+Environment="NO_PROXY=your-registry.com,10.10.10.10,*.example.com"
+```
+
+多个 `NO_PROXY` 变量的值用逗号分隔，而且可以使用通配符（*），极端情况下，如果 `NO_PROXY=*`，那么所有请求都将不通过代理服务器。
+
+重新加载配置文件，重启 dockerd
+
+```ruby
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart docker
+```
+
+检查确认环境变量已经正确配置：
+
+```
+$ sudo systemctl show --property=Environment docker
+```
+
+从 docker info 的结果中查看配置项。
+
+这样配置后，应该可以正常拉取 docker 镜像。
 
 ## 4、Docker常用命令
 
