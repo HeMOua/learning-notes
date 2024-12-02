@@ -79,3 +79,24 @@ pkgs_dirs:
   - D:\ProgramData\miniconda3\pkgs
 ```
 
+## 清理缓存
+
+**（1）删除未使用的包**
+
+```shell
+conda clean --packages
+```
+
+**（2）删除缓存的压缩包文件**
+
+清理缓存的压缩包文件。这些文件是在安装包时下载的，但在安装完成后就不再需要了。输入以下命令：
+
+```shell
+conda clean --tarballs
+```
+
+**（3）删除不再使用的包和缓存**
+
+```bash
+conda clean --all
+```

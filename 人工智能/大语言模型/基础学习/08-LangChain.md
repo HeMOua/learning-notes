@@ -308,3 +308,20 @@ qa = RetrievalQA.from_chain_type(llm=OpenAI(), chain_type="stuff", retriever=ret
 query = "What did the president say about Ketanji Brown Jackson"
 qa.run(query)
 ```
+
+## BaseTool
+
+将 BaseTool 转为标准 openai 格式的 json
+
+```python
+from langchain_core.utils.function_calling import convert_to_openai_tool
+import json
+
+tools = ToolFactory.get_tools()
+
+for tool in tools:
+    print(json.dumps(convert_to_openai_tool(tool), indent=2))
+```
+
+
+

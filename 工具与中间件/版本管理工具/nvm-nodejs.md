@@ -1,4 +1,4 @@
-[nvm-sh/nvm: Node Version Manager - POSIX-compliant bash script to manage multiple active node.js versions (github.com)](https://github.com/nvm-sh/nvm)
+[Home · coreybutler/nvm-windows Wiki (github.com)](https://github.com/coreybutler/nvm-windows/wiki#manual-installation)
 
 1. 在 github 上下载 nvm-install.zip，解压到想要的地方
 

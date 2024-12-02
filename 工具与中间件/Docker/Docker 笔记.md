@@ -52,6 +52,7 @@ yum install docker
 [root@localhost ~]# systemctl start docker
 [root@localhost ~]# docker -v
 Docker version 1.12.6, build 3e8e77d/1.12.6
+# Docker version 26.1.4 build 5650f9b   —— 2024 年记录的版本
 5、开机启动docker
 [root@localhost ~]# systemctl enable docker
 Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service.
@@ -64,7 +65,7 @@ systemctl stop docker
 安装命令如下：
 
 ```
-curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+curl -x http://192.168.56.1:7890 -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 ```
 
 ~~也可以使用国内 daocloud 一键安装命令：~~（没用了）
@@ -133,6 +134,8 @@ https://docs.docker.com/config/daemon/proxy/#httphttps-proxy
 
 **方法一**，配置`daemon.json`文件：
 
+**注意 json 文件不能有额外的逗号**
+
 `vi /etc/docker/daemon.json`
 
 ```python
@@ -144,6 +147,19 @@ https://docs.docker.com/config/daemon/proxy/#httphttps-proxy
   }
 }
 ```
+
+示例
+
+```
+{
+  "proxies": {
+    "http-proxy": "http://192.168.56.1:7890",
+    "https-proxy": "http://192.168.56.1:7890"
+  }
+}
+```
+
+然后重启docker
 
 **方法二**
 
@@ -655,6 +671,53 @@ Options:
 ```
 docker commit -a="angus" -m="angus's tomcat remove doc" b2a3d7b67722  angustomcat:1.0
 ```
+
+
+
+
+
+你可以使用 Docker 的 `docker commit` 和 `docker build` 命令来解包镜像、修改内容并重新打包。以下是具体步骤：
+
+1. **解包镜像并运行容器**： 首先，从镜像启动一个容器，将要修改的镜像解包到容器中。
+
+   ```
+   docker run -it <image_name> /bin/bash
+   ```
+
+   其中，`<image_name>` 是你想要解包的镜像名。
+
+2. **修改容器内容**： 进入容器后，你可以对其内容进行修改，例如在某个文件中添加一行代码。举个例子：
+
+   ```
+   echo 'your_new_code_here' >> /path/to/your_file
+   ```
+
+3. **提交更改并创建新的镜像**： 修改完成后，退出容器并使用 `docker commit` 创建新的镜像。
+
+   ```
+   docker commit <container_id> <new_image_name>
+   ```
+
+   其中，`<container_id>` 是你运行的容器 ID，可以通过 `docker ps` 获取，`<new_image_name>` 是你给新镜像起的名字。
+
+4. **重新打包（构建新镜像）**： 你也可以将这些步骤写入一个 `Dockerfile`，然后使用 `docker build` 来重新打包镜像。
+
+   举个例子，先创建一个 `Dockerfile`：
+
+   ```
+   FROM <image_name>
+   RUN echo 'your_new_code_here' >> /path/to/your_file
+   ```
+
+   然后使用以下命令构建新镜像：
+
+   ```
+   docker build -t <new_image_name> .
+   ```
+
+这样就能解包镜像、添加代码并重新打包。使用 `docker commit` 方法适合对运行中的容器进行快速修改，而 `Dockerfile` 方法更适合自动化和重复使用。
+
+
 
 ## 13、查看容器挂载的目录
 

@@ -12,6 +12,14 @@
 
 [Ubuntu 安装和配置ssh教程](https://blog.csdn.net/future_ai/article/details/81701744)
 
+## SSH 测试连通性
+
+```shell
+ssh -v username@hostname_or_ip
+```
+
+
+
 ## 传输秘钥
 
 ```shell

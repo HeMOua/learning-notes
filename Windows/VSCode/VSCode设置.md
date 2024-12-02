@@ -5,13 +5,13 @@
 > 1. 打开设置，可以按快捷键`CTRL + ,`
 > 2. 在搜索栏搜索`settings.json`，看到`在settings.json中编辑`超链后点进去
 
-### 滚动调整字体大小
+## 滚动调整字体大小
 
 ```json
 "editor.mouseWheelZoom": true,
 ```
 
-### 修改HTML默认语言为中文
+## 修改HTML默认语言为中文
 
 添加如下设置
 ```json
@@ -20,25 +20,25 @@
     "charset": "UTF-8"
 }
 ```
-### emmet的tab触发时灵时不灵
+## emmet的tab触发时灵时不灵
 添加如下设置
 ```
 "emmet.triggerExpansionOnTab": true
 ```
 
-### 自定义智能提示
+## 自定义智能提示
 左下角设置按钮->键盘快捷方式->搜索栏搜"*sug*"->修改
 完成后可以用`Alt+/`自动提示了
 
 ![](img/1491349-20200418205317325-2013351453.png)
 
-### vscode的vetur插件格式化代码不自动加分号
+## vscode的vetur插件格式化代码不自动加分号
 
 把"vetur.format.defaultFormatter.js": “prettier”,改为 “vetur.format.defaultFormatter.js”: “vscode-typescript”
 
 ![](img/1491349-20200922104709549-479768494.png)
 
-### 设置不同语言的缩进格式
+## 设置不同语言的缩进格式
 
 ```json
 "[javascript]": {
@@ -50,7 +50,7 @@
 
 
 
-### 修复eslint报错
+## 修复eslint报错
 
 1、下载 ESlint 插件 和 vetur 插件
 ![](img/1491349-20210209184628458-1215469057.png)
@@ -69,7 +69,7 @@
 
 这样就可以使用 `shift + alt + F` 修复代码了
 
-### jsconfig.json
+## jsconfig.json
 
 当我们配置了路径昵名时，编译器就不能对昵名开头的文件进行智能提示了，如下方法可解决
 
@@ -91,3 +91,11 @@
 
 ————————————
 更多设置参考[文档](https://code.visualstudio.com/docs/editor/codebasics)
+
+## 默认不隐藏 gitignore 中的文件
+
+1. 打开 VSCode 设置（点击左下角的齿轮图标，然后选择 "Settings"）。
+
+2. 搜索 `files.exclude`。
+
+3. 找到 `files.exclude` 设置，取消选中 "Git: Exclude" 或直接在设置中添加规则以显示被忽略的文件。
