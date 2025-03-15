@@ -12,7 +12,8 @@ $ curl -s "https://get.sdkman.io" | bash
 
 ```shell
 # 安装需要的组件,Ubuntu为例
-$ apt install zip$ apt install unzip
+$ apt install zip
+$ apt install unzip
 ```
 
 安装完成后,在终端中输入:

@@ -167,3 +167,24 @@ C:\Users\YOURUSERNAME\AppData\Roaming\pip\pip.ini
 mkdir -p ~/.pip && touch ~/.pip/pip.conf
 ```
 
+## 修复pip
+
+使用 `get-pip.py` 脚本重新安装 `pip`：
+
+- 下载 `get-pip.py`
+
+  ```shell
+  curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+  ```
+
+- 执行脚本重新安装：
+
+  ```shell
+  python get-pip.py
+  ```
+
+或者直接通过 `ensurepip` 重新安装：
+
+```shell
+python -m ensurepip --upgrade
+```

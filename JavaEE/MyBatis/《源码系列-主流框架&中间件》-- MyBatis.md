@@ -1,9 +1,6 @@
 # 《黑马架构师_源码系列-主流框架&中间件》-- MyBatis
 
-## （讲师：子慕）
-
 ```markdown
-
 * 手写持久层框架-仿写mybatis
 * Mybatis架构设计&主要组件
 * Mybatis如何完成的初始化?
@@ -1707,7 +1704,7 @@ select 元素允许你配置很多属性来配置每条语句的行为细节
 
 ### 入口：XMLConfigBuilder#mapperElement
 
-解析全局配置文件中的<mappers>标签
+解析全局配置文件中的\<mappers>标签
 
 ```java
 /**
@@ -2157,7 +2154,7 @@ public MapperBuilderAssistant(Configuration configuration, String resource) {
 public void parse() {
    // mapper映射文件是否已经加载过
    if (!configuration.isResourceLoaded(resource)) {
-     // 从映射文件中的<mapper>根标签开始解析，直到完整的解析完毕
+     // 从映射文件中的\<mapper>根标签开始解析，直到完整的解析完毕
      configurationElement(parser.evalNode("/mapper"));
      // 标记已经解析
      configuration.addLoadedResource(resource);
@@ -2174,7 +2171,7 @@ public void parse() {
 
 #### 2.1 XMLMapperBuilder#configurationElement
 
-从映射文件中的<mapper>根标签开始解析，直到完整的解析完毕
+从映射文件中的\<mapper>根标签开始解析，直到完整的解析完毕
 
 ```java
  /**

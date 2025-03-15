@@ -1,20 +1,6 @@
-## 注释
+## 变量与数据类型
 
-单行注释：
-
-```go
-// 单行注释
-```
-
-多行注释：
-
-```go
-/*
-多行注释
-*/
-```
-
-## 变量定义
+### 变量定义
 
 > 简单使用
 
@@ -67,7 +53,7 @@ var (
 + 布尔型变量默认为 false
 + 切片、函数、指针变量的默认为 nil
 
-## 变量初始化
+### 变量初始化
 
 > 变量的初始化标准格式
 
@@ -121,7 +107,7 @@ func main() {
 
 这时会编译报错
 
-## 变量内存地址
+### 变量内存地址
 
 ```go
 func main() {
@@ -132,18 +118,7 @@ func main() {
 }
 ```
 
-## 变量交换
-
-```go
-var (
-    a int = 1
-    b int = 2
-)
-
-a, b = b, a
-```
-
-## 匿名变量
+### 匿名变量
 
 匿名变量的特点是一个下画线 `_`，`_` 本身就是一个特殊的标识符，被称为空白标识符。它可以像其他标识符那样用于变量的声明或赋值（任何类型都可以赋值给它），但任何赋给这个标识符的值都将被抛弃，因此这些值不能在后续的代码中使用，也不可以使用这个标识符作为变量对其它变量进行赋值或运算。使用匿名变量时，只需要在变量声明的地方使用下画线替换即可。例如：
 
@@ -167,3 +142,131 @@ func main() {
 在编码过程中，可能会遇到没有名称的变量、类型或方法。虽然这不是必须的，但有时候这样做可以极大地增强代码的灵活性，这些变量被统称为匿名变量。
 
 匿名变量不占用内存空间，不会分配内存。匿名变量与匿名变量之间也不会因为多次声明而无法用。
+
+## 运算符
+
+1. 算术运算符：+，-，*，/，%，++，--
+2. 赋值运算符：=，+=，~=，*=，/=，%=
+3. 关系运算符：==，!=，>，<，>=，<=
+
+4. 逻辑运算符：&&，||，!
+
+5. 位运算符：&，|，^
+
+6. 其它运算符：&，*
+
+### 变量交换
+
+```go
+var (
+    a int = 1
+    b int = 2
+)
+
+a, b = b, a
+```
+
+## 流程控制
+
+### for 循环
+
+```go
+func main() {
+    // 普通循环
+	for i := 0; i < 10; i++ {
+		fmt.Println(i)
+	}
+    // 类似 while 写法
+    i := 0
+    for i < 10 {
+        fmt.Println(i)
+        i++
+    }
+    // 死循环
+    for {
+        
+    }
+    for ;; {
+        
+    }
+    // for range
+    str := "Hello, World!"
+	for idx, val := range str {
+		fmt.Printf("idx: %d, val: %c\n", idx, val)
+	}
+    // 只需要索引
+    for i := range str {
+        fmt.Println(i)
+    }
+
+    // 只需要值
+    for _, val := range str {
+        fmt.Printf("%c\n", val)
+    }
+    // 遍历数组/切片
+    arr := []int{1, 2, 3}
+    for i, v := range arr {
+        fmt.Printf("索引：%d, 值：%d\n", i, v)
+    }
+
+    // 遍历 map
+    m := map[string]int{"a": 1, "b": 2}
+    for k, v := range m {
+        fmt.Printf("键：%s, 值：%d\n", k, v)
+    }
+}
+```
+
+## 函数
+
+### defer 关键字
+
+函数中，程序员经常需要创建资源，为了在函数执行完毕后，及时的释放资源，Go的设计者提供defer关键字
+
+```go
+
+func add(a int, b int) int {
+    // 在Golang中，程序遇到defer关键字，不会立即执行 defer 后的语句
+    // 而是将 defer 后的语句压入一个栈中，然后继续执行函数后面的语句
+	defer fmt.Println("a =", a)
+	defer fmt.Println("b =", b)
+	sum := a + b
+	fmt.Println("sum =", sum)
+	return sum
+}
+
+func main() {
+	fmt.Println(add(1, 2))
+}
+// output
+sum = 3
+b = 2
+a = 1
+3
+```
+
+需要注意的是，defer 会将后面的代码语句压入栈中，也会将相关的值同时拷贝入栈中，不会随着函数后面的变化而变化。
+
+```go
+func add(a int, b int) int {
+	defer fmt.Println("a =", a)
+	defer fmt.Println("b =", b)
+
+	a += 20
+	b += 30
+
+	sum := a + b
+	fmt.Println("sum =", sum)
+	return sum
+}
+
+func main() {
+	fmt.Println(add(1, 2))
+}
+// output
+sum = 53
+b = 2
+a = 1
+53
+```
+

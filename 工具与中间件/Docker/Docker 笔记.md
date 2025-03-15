@@ -387,7 +387,16 @@ docker run \
 
 **3、以命令行的方式运行容器**
 
-`docker exec -it [container-id|contain-name] bash`
+```shell
+docker exec -it [container-id|contain-name] bash
+```
+
+**4、复制**
+
+```shell
+docker cp [OPTIONS] <source_path> <container>:<destination_path>
+docker cp [OPTIONS] <container>:<source_path> <destination_path>
+```
 
 ## 5、创建容器
 
